@@ -14,7 +14,7 @@ class Agent:
     def __init__(self, size, mass, pos, goal, desiredSpeed=4):
 
         # the constants
-        self.A = 180
+        self.A = 2000
         self.B = 0.08
         self.tau = 0.5
         # instance variables

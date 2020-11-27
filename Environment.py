@@ -20,7 +20,7 @@ class Wall:
     def __init__(self, wallType, **parameters):
         # type : "circle" | "line", points
         # Circle : type='circle' { "center": Point(x,y), "radius": r }
-        # Line : type='line'{ "p1": Point(x1,y1), "p2": Point(x2,y2) }
+        # Line : type='line'{ "pf: Point(x1,y1), "p2": Point(x2,y2) }
         self.wallType = wallType
         self.parameters = parameters
         self.checkValid()
@@ -49,12 +49,12 @@ class Goal(Wall):
         if (self.parameters['p1'].x == self.parameters['p2'].x):
             if self.parameters['p1'].y > self.parameters['p2'].y:
                 p1Temp = self.parameters['p1']
-                self.parameters['p1'] = self.paramters['p2']
+                self.parameters['p1'] = self.parameters['p2']
                 self.parameters['p2'] = p1Temp
         elif (self.parameters['p1'].y == self.parameters['p2'].y):
             if self.parameters['p1'].x > self.parameters['p2'].x:
                 p1Temp = self.parameters['p1']
-                self.parameters['p1'] = self.paramters['p2']
+                self.parameters['p1'] = self.parameters['p2']
                 self.parameters['p2'] = p1Temp
 
 
@@ -205,6 +205,16 @@ def runSimulation(roomHeight=10,
 
 
     agents = []
+    # old_agent = int(numAgents*0.2)
+    # for _ in range(old_agent):
+    #     # Agent(size, mass, pos, goal, desiredSpeed = 4))
+    #     size = randFloat(.25, .35)
+    #     mass = agentMass
+    #     pos = Point(randFloat(.5, 2*roomWidth/3 - .5), randFloat(.5,roomHeight-.5))
+    #     goal = goals[0]
+    #
+    #     agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed/3))
+
     for _ in range(numAgents):
         # Agent(size, mass, pos, goal, desiredSpeed = 4))
         size = randFloat(.25, .35)
@@ -247,8 +257,8 @@ def runExperiment():
 
     time_to_escape = []
     list_test = [20, 50, 100, 200]
-    for num_agents in range(4):  #(20, 50, 100, 200)
-        statistics = runSimulation(barrier=None, view=True, desiredSpeed=1.5, numAgents=list_test[num_agents], roomHeight=15, roomWidth=15)
+    for num_agents in range(len(list_test)):  #(20, 50, 100, 200)
+        statistics = runSimulation(barrier=None, view=False, desiredSpeed=1.5, numAgents=list_test[num_agents], roomHeight=15, roomWidth=15)
 
         x.append(num_agents)
         time_to_escape.append(len(statistics))
