@@ -25,6 +25,7 @@ class Wall:
         self.parameters = parameters
         self.checkValid()
 
+
     def checkValid(self):
         if self.wallType == 'circle':
             assert isinstance(self.parameters["center"], Point), "Circles need a center"
@@ -56,6 +57,22 @@ class Goal(Wall):
                 p1Temp = self.parameters['p1']
                 self.parameters['p1'] = self.parameters['p2']
                 self.parameters['p2'] = p1Temp
+
+    def get_x(self):
+        return (self.parameters['p1'].x)
+    def get_higher_y(self):
+        return (self.parameters['p2'].y)
+    def get_lower_y(self):
+        return (self.parameters['p1'].y)
+    def is_right(self):
+        if self.get_x()!=0:
+            return True
+        else:
+            return False
+
+    def agentsDistance(agent, other):
+        return agent.pos._distance_(other.pos);
+
 
 
 class Environment():
@@ -108,7 +125,7 @@ class EnvironmentViewer():
 
     def __init__(self, environment):
         self.env = environment
-        self.screen = pygame.display.set_mode((1500,500))
+        self.screen = pygame.display.set_mode((1000,500),pygame.FULLSCREEN)
 
     def draw(self):
         self.screen.fill(self.BG_COLOR)
@@ -188,17 +205,23 @@ def runSimulation(roomHeight=10,
     if barrier:
         walls.append(Wall('circle', **{ 'center': Point(roomWidth + barrier['pos'].x, roomHeight//2 + barrier['pos'].y), 'radius': barrier['radius'] }))
 
+
     walls.append(Wall('line', **{ 'p1': Point(0,0), 'p2': Point(roomWidth, 0) })) # Top
-    # walls.append(Wall('line', **{ 'p1': Point(0,0), 'p2': Point(0, roomHeight) })) # Left
+    #walls.append(Wall('line', **{ 'p1': Point(0,0), 'p2': Point(0, roomHeight) })) # Left
     walls.append(Wall('line', **{ 'p1': Point(0,roomHeight), 'p2': Point(roomWidth, roomHeight) })) # Bottom
 
+#door right
     walls.append(Wall('line', **{ 'p1': Point(roomWidth,0), 'p2': Point(roomWidth, roomHeight/2 - doorWidth/2) })) # Top Doorway
     walls.append(Wall('line', **{ 'p1': Point(roomWidth, roomHeight/2 + doorWidth/2), 'p2': Point(roomWidth, roomHeight) })) # Bottom Doorway
 
-
+#door left
+    walls.append(Wall('line', **{ 'p1': Point(0,0), 'p2': Point(0, roomHeight/2 - doorWidth/2) })) # Top Doorway
+    walls.append(Wall('line', **{ 'p1': Point(0, roomHeight/2 + doorWidth/2), 'p2': Point(0, roomHeight) })) # Bottom Doorway
 
     goals = []
     goals.append(Goal('line', **{ 'p1': Point(roomWidth, roomHeight/2 - doorWidth/2), 'p2': Point(roomWidth, roomHeight/2 + doorWidth/2) }))
+    goals.append(Goal('line', **{ 'p1': Point(0, roomHeight/2 - doorWidth/2), 'p2': Point(0, roomHeight/2 + doorWidth/2) }))
+
 
     instruments = []
     instruments.append(ReachedGoal())
@@ -215,14 +238,54 @@ def runSimulation(roomHeight=10,
     #
     #     agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed/3))
 
+    def closest_door(x,y,goal1,goal2):
+        if y>goal1.get_higher_y():
+            distance_left = math.sqrt(pow(x-goal2.get_x(),2) +pow(y-goal2.get_higher_y(),2) )
+            distance_right = math.sqrt(pow(x-goal1.get_x(),2) +pow(y-goal1.get_higher_y(),2) )
+        else:
+            distance_left = math.sqrt(pow(x - goal2.get_x(), 2) + pow(y - goal2.get_lower_y(), 2))
+            distance_right = math.sqrt(pow(x - goal1.get_x(), 2) + pow(y - goal1.get_lower_y(), 2))
+
+        if distance_left < distance_right:
+            return goal2
+        else:
+            return goal1
+
+#3.1
+    i=1
     for _ in range(numAgents):
         # Agent(size, mass, pos, goal, desiredSpeed = 4))
         size = randFloat(.25, .35)
         mass = agentMass
         pos = Point(randFloat(.5, 2*roomWidth/3 - .5), randFloat(.5,roomHeight-.5))
-        goal = goals[0]
-
+        print(pos)
+        goal = closest_door(pos.x,pos.y,goals[0],goals[1])
+        print(goal.get_x())
+        #choice = random.randint(0,len(goals)-1)
+        #print(choice)
+        #goal = goals[choice]
         agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed))
+
+
+        #3.2
+        # size = randFloat(.25, .35)
+        # mass = agentMass
+        # pos = Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))
+        # print(pos)
+        # if (i < numAgents / 2):
+        #     choice = random.randint(0, len(goals) - 1)
+        #     goal = goals[choice]
+        # else:
+        #     goal = closest_door(pos.x, pos.y, goals[0], goals[1])
+        #
+        # print(goal.get_x())
+        # print(goal.get_higher_y())
+        # # choice = random.randint(0,len(goals)-1)
+        # # print(choice)
+        # # goal = goals[choice]
+        # agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed))
+        # i+=1
+
 
     env = Environment(100, walls, goals, agents, {}, instruments)
 
@@ -258,7 +321,7 @@ def runExperiment():
     time_to_escape = []
     list_test = [20, 50, 100, 200]
     for num_agents in range(len(list_test)):  #(20, 50, 100, 200)
-        statistics = runSimulation(barrier=None, view=False, desiredSpeed=1.5, numAgents=list_test[num_agents], roomHeight=15, roomWidth=15)
+        statistics = runSimulation(barrier=None, view=True, desiredSpeed=1.5, numAgents=list_test[num_agents], roomHeight=15, roomWidth=15)
 
         x.append(num_agents)
         time_to_escape.append(len(statistics))

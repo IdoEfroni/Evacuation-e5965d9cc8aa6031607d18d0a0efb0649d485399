@@ -1,6 +1,7 @@
 from Point import Point
 import math
 import time
+import random
 
 
 class Agent:
@@ -34,33 +35,72 @@ class Agent:
         """
         p1 = self.goal.parameters['p1']
         p2 = self.goal.parameters['p2']
+        if p1.is_right()==True:
+            if self.pos.x<= p1.x:
+                return Point(1, 0)
+            elif self.pos.y - self.size < p1.y:
+                return self.vectorTo(p1 + Point(0, .5)).norm()
+            # If below the goal, move to bottom point
+            elif self.pos.y + self.size > p2.y:
+                return self.vectorTo(p2 - Point(0, .5)).norm()
+            else:
+                return Point(1, 0)
 
-        # If past the goal move right
-        if self.pos.x >= p1.x:
-            return Point(1, 0)
-
-        # If above the goal, move to top point
-        elif self.pos.y - self.size < p1.y:
-            return self.vectorTo(p1 + Point(0, .5)).norm()
-
-        # If below the goal, move to bottom point
-        elif self.pos.y + self.size > p2.y:
-
-            return self.vectorTo(p2 - Point(0, .5)).norm()
-
-        # If directly in front of the goal, move right
         else:
+            if self.pos.x>= p1.x:
+                return Point(-1, 0)
+            elif self.pos.y - self.size < p1.y:
+                return self.vectorTo(p1 - Point(0, .5)).norm()
+            # If below the goal, move to bottom point
+            elif self.pos.y + self.size > p2.y:
+                return self.vectorTo(p2 + Point(0, .5)).norm()
+            else:
+                return Point(-1, 0)
 
-            return Point(1, 0)
+
+
+
+
+        # # If past the goal move right
+        # if self.pos.x >= p1.x and p1.is_right()==True:
+        #     return Point(1, 0)
+        #
+        # # elif self.pos.x >= p1.x and p1.is_right() == False:
+        # #     return Point(-1, 0)
+        # # If above the goal, move to top point
+        # elif self.pos.x>=p1.x and p1.is_right()==False:
+        #     return Point(-1,0)
+        #
+        # elif self.pos.y - self.size < p1.y:
+        #     return self.vectorTo(p1 + Point(0, .5)).norm()
+        #
+        # # If below the goal, move to bottom point
+        # elif self.pos.y + self.size > p2.y:
+        #     return self.vectorTo(p2 - Point(0, .5)).norm()
+        # # If directly in front of the goal, move right
+        #
+        # elif p1.is_right()==False:
+        #     return Point(-1, 0)
+        # else:
+        #     return Point(1, 0)
 
     def vectorTo(self, point):
         return point - self.pos
 
     def get_time(self):
         return self.time_goal
-    def move(self, force):
+    def move(self, force,closeNeighbour=None,certainty=True):
+        if(closeNeighbour!=None): #in case of smoke, goal is a close neighbour or goal point
+            self.goal = closeNeighbour
         """ update step - move toward goal during unit time """
-        self.pos = self.pos + self.velocity * Agent.time
+        negative = 1 if random.uniform(0,1)>0.5 else -1
+        if self.goal.get_x() ==0:
+            negative =-1
+        else:
+            negative=1
+        negativeDirection = Point(negative*self.velocity.x,self.velocity.y)
+        #self.pos = self.pos + self.velocity * Agent.time if certainty else self.pos + negativeDirection * Agent.time
+        self.pos = self.pos + negativeDirection * Agent.time
         self.velocity = self.velocity + force / self.mass * Agent.time
 
         # apply speed limit

@@ -199,6 +199,7 @@ def runSimulation(roomHeight=10,
 
     goals = []
     goals.append(Goal('line', **{ 'p1': Point(roomWidth, roomHeight/2 - doorWidth/2), 'p2': Point(roomWidth, roomHeight/2 + doorWidth/2) }))
+    goals.append(Goal('line', **{ 'p1': Point(roomWidth, roomHeight/2 - doorWidth/2), 'p2': Point(roomWidth, roomHeight/2 + doorWidth/2) }))
 
     instruments = []
     instruments.append(ReachedGoal())
@@ -210,7 +211,9 @@ def runSimulation(roomHeight=10,
         size = randFloat(.25, .35)
         mass = agentMass
         pos = Point(randFloat(.5, 2*roomWidth/3 - .5), randFloat(.5,roomHeight-.5))
-        goal = goals[0]
+        choice = random.randint(0,len(goals))
+        print(choice)
+        goal = goals[choice]
 
         agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed))
 

@@ -40,3 +40,12 @@ class Point:
 
     def norm(self):
         return self / self.mag()
+
+    def _distance_(self, other):
+        return sqrt(pow(self.x - other.x, 2) + pow(self.y - other.y, 2))
+
+    def is_right(self):
+        if self.x == 0:
+            return False
+        else:
+            return True
