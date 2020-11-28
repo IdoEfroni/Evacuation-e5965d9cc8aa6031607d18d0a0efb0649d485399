@@ -1,5 +1,6 @@
 from Point import Point
 import math
+from numpy import random
 import time
 
 
@@ -11,7 +12,7 @@ class Agent:
     time = .01
     _index = 0
 
-    def __init__(self, size, mass, pos, goal, desiredSpeed=4):
+    def __init__(self, size, mass, pos, goal, desiredSpeed=4, certainty=True):
 
         # the constants
         self.A = 2000
@@ -25,6 +26,7 @@ class Agent:
         self.desiredSpeed = desiredSpeed  # preferred speed: float
         self.goal = goal  # exit: Goal object
         self.index = Agent._index
+        self.certainty = certainty
         Agent._index += 1
 
     @property
@@ -36,8 +38,11 @@ class Agent:
         p2 = self.goal.parameters['p2']
 
         # If past the goal move right
-        if self.pos.x >= p1.x:
+        if self.pos.x >= p1.x and self.goal.isRight and self.goal.isReal:
             return Point(1, 0)
+
+        elif self.pos.x <= p1.x and not self.goal.isRight and self.goal.isReal:
+            return Point(-1, 0)
 
         # If above the goal, move to top point
         elif self.pos.y - self.size < p1.y:
@@ -45,21 +50,37 @@ class Agent:
 
         # If below the goal, move to bottom point
         elif self.pos.y + self.size > p2.y:
-
             return self.vectorTo(p2 - Point(0, .5)).norm()
+
+        elif self.pos.x !=p1.x and not self.goal.isReal:
+            return self.vectorTo(Point(p1.x-self.pos.x,0)).norm()
+
+        elif self.pos.x <= p1.x and self.goal.isRight and self.goal.isReal:
+            return Point(1, 0)
+
+        elif self.pos.x >= p1.x and not self.goal.isRight and self.goal.isReal:
+            return Point(-1, 0)
+        # elif self.pos.x< p1.x:
+        #     return self.vectorTo(p1 + Point(0, .5)).norm()
 
         # If directly in front of the goal, move right
         else:
 
-            return Point(1, 0)
+            return Point(1, 0) if random.uniform(0, 1) >= 0.5 else Point(-1, 0)
 
     def vectorTo(self, point):
         return point - self.pos
 
     def get_time(self):
         return self.time_goal
-    def move(self, force):
+
+    def move(self, force, closeNeighbour=None):
+        if (closeNeighbour != None):  # in case of smoke, goal is a close neighbour or goal point
+            self.goal = closeNeighbour
         """ update step - move toward goal during unit time """
+        negative = 1 if random.uniform(0, 1) > 0.5 else -1
+        negativeDirection = Point(negative * self.velocity.x, self.velocity.y)
+        # self.pos = self.pos + self.velocity * Agent.time if certainty else self.pos + negativeDirection * Agent.time
         self.pos = self.pos + self.velocity * Agent.time
         self.velocity = self.velocity + force / self.mass * Agent.time
 
@@ -102,18 +123,9 @@ class Agent:
                 if self.size < nearDistance:
                     return Point(0, 0)
 
-        else:  # wallType : circle
-            normalUnitVector = (self.pos - wall.parameters["center"]).norm()
-            tangentLine = Point(-normalUnitVector.y, normalUnitVector.x)  # rotate 90 degrees counterclockwise
-            if dotProduct(self.velocity, tangentLine) >= 0:
-                tangentUnitVector = tangentLine
-            else:
-                tangentUnitVector = -tangentLine
-            distance = (self.pos - wall.parameters["center"]).mag() - wall.parameters["radius"]
-
         overlap = self.size - distance
 
-        return 3*self.calculateForce(overlap, self.velocity, tangentUnitVector, normalUnitVector)
+        return 3 * self.calculateForce(overlap, self.velocity, tangentUnitVector, normalUnitVector)
 
     # the force between the agent and other agent
     def pairForce(self, other):
@@ -152,4 +164,3 @@ class Agent:
 
 def dotProduct(vec1, vec2):
     return vec1.x * vec2.x + vec1.y * vec2.y
-
