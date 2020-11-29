@@ -251,8 +251,8 @@ def runSimulation(roomHeight=10,
     goals = []
     # goals.append(Goal('line',True,True, **{'p1': Point(roomWidth, roomHeight / 2 - doorWidth / 2),
                                  # 'p2': Point(roomWidth, roomHeight / 2 + doorWidth / 2)}))
-    goals.append(Goal('line',True,True **{ 'p1': Point(roomWidth, roomHeight/2 - doorWidth/2), 'p2': Point(roomWidth, roomHeight/2 + doorWidth/2) }))
-    goals.append(Goal('line',False,True **{ 'p1': Point(0, roomHeight/2 - doorWidth/2), 'p2': Point(0, roomHeight/2 + doorWidth/2) }))
+    goals.append(Goal('line',True,True, **{ 'p1': Point(roomWidth, roomHeight/2 - doorWidth/2), 'p2': Point(roomWidth, roomHeight/2 + doorWidth/2) }))
+    goals.append(Goal('line',False,True, **{ 'p1': Point(0, roomHeight/2 - doorWidth/2), 'p2': Point(0, roomHeight/2 + doorWidth/2) }))
 
 
     instruments = []
@@ -332,7 +332,7 @@ def runSimulation(roomHeight=10,
         # i+=1
 
 
-    env = Environment(100, walls, goals, agents, {}, instruments)
+    env = Environment(100, walls, goals, agents, {}, instruments, smoke)
 
     if view:
         viewer = EnvironmentViewer(env)
@@ -368,7 +368,7 @@ def runExperiment():
     list_test = [20]
     for num_agents in range(len(list_test)):  # (20, 50, 100, 200)
         statistics = runSimulation(view=True, desiredSpeed=1.5, numAgents=list_test[num_agents], roomHeight=15,
-                                   roomWidth=15, smoke=True)
+                                   roomWidth=15, smoke=False)
 
         x.append(num_agents)
         time_to_escape.append(len(statistics))
