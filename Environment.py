@@ -103,6 +103,15 @@ def closeNeighbour(env, agent):
                            'p2': Point(randFloat(.5, 2 * 15 / 3 - .5), randFloat(.5, 15 - .5))})  # random direction
 
 
+def isFinished(agent, goals):
+
+    if agent.pos.x >= agent.goal.parameters['p1'].x and agent.goal.isReal and agent.goal.isRight:
+        return True
+    elif agent.pos.x <= agent.goal.parameters['p1'].x and agent.goal.isReal and not agent.goal.isRight:
+        return True
+    return False
+
+
 class Environment():
     conditions = {'k': 1.2 * 10 ** 5, 'ka': 2.4 * 10 ** 5}
 
@@ -130,6 +139,8 @@ class Environment():
                 pairForce += agent.pairForce(agent2)
             netForce = selfDriveForce + pairForce + wallForce
             agent.move(netForce, closeNeighbour(self, agent)) if self.smoke else agent.move(netForce)
+            if isFinished(agent,self.goals):
+                agent.Finish = True
 
         self.updateInstruments()
 
@@ -214,9 +225,7 @@ class ReachedGoal(Instrument):
         num_escaped = 0
 
         for agent in env.agents:
-            if agent.pos.x > agent.goal.parameters['p1'].x and agent.goal.isReal and agent.goal.isRight:
-                num_escaped += 1
-            elif agent.pos.x < agent.goal.parameters['p1'].x and agent.goal.isReal and not agent.goal.isRight:
+            if agent.Finish:
                 num_escaped += 1
 
         return num_escaped
@@ -374,7 +383,10 @@ def runSimulation(roomHeight=10,
             sys.stdout.write('\r' + str(message) + ' ' * 20)
             sys.stdout.flush()  # important
 
-        if len(env.instruments[0].metric) == 9000:
+        if len(env.instruments[0].metric) == 9000 or env.instruments[0].metric[-1] == len(env.agents):
+            message = "num escaped: {}, step: {}".format(env.instruments[0].metric[-1], len(env.instruments[0].metric))
+            sys.stdout.write('\r' + str(message) + ' ' * 20)
+            sys.stdout.flush()  # important
             break
 
     print()
@@ -390,7 +402,7 @@ def runExperiment():
     list_test = [20]
     for num_agents in range(len(list_test)):  # (20, 50, 100, 200)
         statistics = runSimulation(view=True, desiredSpeed=1.5, numAgents=list_test[num_agents], roomHeight=15,
-                                   roomWidth=15, smoke=True, twoDoors=True,halfMode=False)
+                                   roomWidth=15, doorWidth=1.5, smoke=False,twoDoors=True, halfMode=True)
 
         x.append(num_agents)
         time_to_escape.append(len(statistics))
