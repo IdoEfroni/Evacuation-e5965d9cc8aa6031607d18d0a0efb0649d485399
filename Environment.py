@@ -199,23 +199,23 @@ def runSimulation(roomHeight=10,
 
     goals = []
     goals.append(Goal('line', **{ 'p1': Point(roomWidth, roomHeight/2 - doorWidth/2), 'p2': Point(roomWidth, roomHeight/2 + doorWidth/2) }))
-
+    goals.append(Goal('line', **{ 'p1': Point(0, roomHeight/2 - doorWidth/2), 'p2': Point(0, roomHeight/2 + doorWidth/2) }))
     instruments = []
     instruments.append(ReachedGoal())
 
 
     agents = []
-    # old_agent = int(numAgents*0.2)
-    # for _ in range(old_agent):
-    #     # Agent(size, mass, pos, goal, desiredSpeed = 4))
-    #     size = randFloat(.25, .35)
-    #     mass = agentMass
-    #     pos = Point(randFloat(.5, 2*roomWidth/3 - .5), randFloat(.5,roomHeight-.5))
-    #     goal = goals[0]
-    #
-    #     agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed/3))
+    old_agent = int(numAgents*0.2)
+    for _ in range(old_agent):
+        # Agent(size, mass, pos, goal, desiredSpeed = 4))
+        size = randFloat(.25, .35)
+        mass = agentMass
+        pos = Point(randFloat(.5, 2*roomWidth/3 - .5), randFloat(.5,roomHeight-.5))
+        goal = goals[0]
 
-    for _ in range(numAgents):
+        agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed/3))
+
+    for _ in range(numAgents-old_agent):
         # Agent(size, mass, pos, goal, desiredSpeed = 4))
         size = randFloat(.25, .35)
         mass = agentMass
@@ -256,7 +256,7 @@ def runExperiment():
 
 
     time_to_escape = []
-    list_test = [20, 50, 100, 200]
+    list_test = [200]
     for num_agents in range(len(list_test)):  #(20, 50, 100, 200)
         statistics = runSimulation(barrier=None, view=False, desiredSpeed=1.5, numAgents=list_test[num_agents], roomHeight=15, roomWidth=15)
 
