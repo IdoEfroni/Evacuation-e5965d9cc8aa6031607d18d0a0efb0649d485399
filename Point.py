@@ -27,6 +27,9 @@ class Point:
     def __truediv__(self, scalar):
         return Point(self.x / scalar, self.y / scalar)
 
+    def __distance__(self,other):
+        return sqrt(pow(self.x-other.x,2) +pow(self.y-other.y,2))
+
     @property
     def tuple(self):
         return (self.x, self.y)
@@ -40,3 +43,12 @@ class Point:
 
     def norm(self):
         return self / self.mag()
+
+    def _distance_(self, other):
+        return sqrt(pow(self.x - other.x, 2) + pow(self.y - other.y, 2))
+
+    def is_right(self):
+        if self.x == 0:
+            return False
+        else:
+            return True
