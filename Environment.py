@@ -313,7 +313,7 @@ def runSimulation(roomHeight=10,
                 else:
                     goal = closest_door(pos.x, pos.y, goals[0], goals[1])
             elif not halfMode and smoke:
-                    goal = Goal('line', False, **{
+                    goal = closest_door(pos.x, pos.y, goals[0], goals[1]) if i<numAgents/2 else Goal('line', False, **{
                 'p1': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5)),
                 'p2': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))})
             else:
@@ -378,7 +378,7 @@ def runSimulation(roomHeight=10,
         if view:
             viewer.draw()
             # pygame.event.wait()
-        if (len(env.instruments[0].metric) % 100 == 0):
+        if len(env.instruments[0].metric) % 100 == 0:
             message = "num escaped: {}, step: {}".format(env.instruments[0].metric[-1], len(env.instruments[0].metric))
             sys.stdout.write('\r' + str(message) + ' ' * 20)
             sys.stdout.flush()  # important
@@ -399,10 +399,10 @@ def runExperiment():
 
     time_to_escape = []
     # list_test = [20, 50, 100, 200]
-    list_test = [20]
+    list_test = [5]
     for num_agents in range(len(list_test)):  # (20, 50, 100, 200)
         statistics = runSimulation(view=True, desiredSpeed=1.5, numAgents=list_test[num_agents], roomHeight=15,
-                                   roomWidth=15, doorWidth=1.5, smoke=False,twoDoors=True, halfMode=True)
+                                   roomWidth=15, doorWidth=1.5, smoke=True,twoDoors=True, halfMode=False)
 
         x.append(num_agents)
         time_to_escape.append(len(statistics))

@@ -77,7 +77,7 @@ class Agent:
         return self.time_goal
 
     def move(self, force, closeNeighbour=None):
-        if (closeNeighbour != None):  # in case of smoke, goal is a close neighbour or goal point
+        if (closeNeighbour != None and not self.goal.isReal):  # in case of smoke, goal is a close neighbour or goal point
             self.goal = closeNeighbour
         """ update step - move toward goal during unit time """
         negative = 1 if random.uniform(0, 1) > 0.5 else -1
