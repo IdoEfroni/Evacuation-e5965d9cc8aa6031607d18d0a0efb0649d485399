@@ -14,7 +14,7 @@ class Agent:
     time = .01
     _index = 0
 
-    def __init__(self, size, mass, pos, goal, desiredSpeed=4, certainty=True):
+    def __init__(self, size, mass, pos, goal, desiredSpeed=4, Finish=False):
 
         # the constants
         self.A = 2000
@@ -28,7 +28,7 @@ class Agent:
         self.desiredSpeed = desiredSpeed  # preferred speed: float
         self.goal = goal  # exit: Goal object
         self.index = Agent._index
-        self.certainty = certainty
+        self.Finish = Finish
         Agent._index += 1
 
     @property
@@ -54,8 +54,8 @@ class Agent:
         elif self.pos.y + self.size > p2.y:
             return self.vectorTo(p2 - Point(0, .5)).norm()
 
-        elif self.pos.x !=p1.x and not self.goal.isReal:
-            return self.vectorTo(Point(p1.x-self.pos.x,0)).norm()
+        elif self.pos.x != p1.x and not self.goal.isReal:
+            return self.vectorTo(Point(p1.x - self.pos.x, 0)).norm()
 
         elif self.pos.x <= p1.x and self.goal.isRight and self.goal.isReal:
             return Point(1, 0)
