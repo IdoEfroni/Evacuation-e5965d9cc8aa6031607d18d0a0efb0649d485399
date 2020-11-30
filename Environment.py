@@ -298,9 +298,38 @@ def runSimulation(roomHeight=10,
             return goal2
         else:
             return goal1
+
+    #2.3 code
+    oldAgents = int(numAgents*0.2)
+    i = 1
+    for _ in range(oldAgents):
+        # Agent(size, mass, pos, goal, desiredSpeed = 4))
+        size = randFloat(.25, .35)
+        mass = agentMass
+        # pos = Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))
+        pos = Point(randFloat(.5, roomWidth - .5), randFloat(.5, roomHeight - .5))
+        if twoDoors:
+            if halfMode:
+                if (i < numAgents / 2):
+                    goal = goals[0]
+                else:
+                    goal = closest_door(pos.x, pos.y, goals[0], goals[1])
+            elif not halfMode and smoke:
+                goal = closest_door(pos.x, pos.y, goals[0], goals[1]) if i < numAgents / 2 else Goal('line', False, **{
+                    'p1': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5)),
+                    'p2': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))})
+            else:
+                goal = closest_door(pos.x, pos.y, goals[0], goals[1])
+        else:
+            goal = goals[0] if not smoke else Goal('line', False, **{
+                'p1': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5)),
+                'p2': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))})
+
+        agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed/3))
+        i += 1
 #3.3
     i=1
-    for _ in range(numAgents):
+    for _ in range(numAgents-oldAgents):
         # Agent(size, mass, pos, goal, desiredSpeed = 4))
         size = randFloat(.25, .35)
         mass = agentMass
@@ -383,7 +412,7 @@ def runSimulation(roomHeight=10,
             sys.stdout.write('\r' + str(message) + ' ' * 20)
             sys.stdout.flush()  # important
 
-        if len(env.instruments[0].metric) == 9000 or env.instruments[0].metric[-1] == len(env.agents):
+        if len(env.instruments[0].metric) == 9000000000 or env.instruments[0].metric[-1] == len(env.agents):
             message = "num escaped: {}, step: {}".format(env.instruments[0].metric[-1], len(env.instruments[0].metric))
             sys.stdout.write('\r' + str(message) + ' ' * 20)
             sys.stdout.flush()  # important
@@ -398,13 +427,15 @@ def runExperiment():
     import time
 
     time_to_escape = []
-    # list_test = [20, 50, 100, 200]
-    list_test = [20, 50, 100]
-    for num_agents in range(len(list_test)):  # (20, 50, 100, 200)
-        statistics = runSimulation(view=True, desiredSpeed=1.5, numAgents=list_test[num_agents], roomHeight=15,
-                                   roomWidth=15, smoke=True, twoDoors=True,halfMode=False)
+    list_speed = [1,1.5,2,2.5,3,4,5,6,7,8,9,10]
+    for speed in list_speed:
+        print(speed)
+    #list_test = [50]
+    #for num_agents in range(len(list_test)):  # (20, 50, 100, 200)
+        statistics = runSimulation(view=False, desiredSpeed=speed, numAgents=50, roomHeight=15,
+                                   roomWidth=15, smoke=False, twoDoors=False,halfMode=False)
 
-        x.append(num_agents)
+        x.append(50)
         time_to_escape.append(len(statistics))
         print(time_to_escape)
     export = [x, time_to_escape]
