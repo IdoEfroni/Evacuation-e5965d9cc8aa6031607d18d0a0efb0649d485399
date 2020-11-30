@@ -407,7 +407,7 @@ def runExperiment():
     import time
 
     time_to_escape = []
-    list_speed = [1.5,2]
+    list_speed = [6,7]
     list_test = [20,50]
     statistics = -1
     for speed in list_speed:
