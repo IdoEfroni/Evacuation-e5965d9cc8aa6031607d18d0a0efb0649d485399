@@ -407,14 +407,9 @@ def runExperiment():
     import time
 
     time_to_escape = []
-    list_speed = [1,1.5,2,2.5,3,4,5,6,7,8,9,10]
-
-    #list_test = [20, 50, 100, 200]
-    # list_test = [100]
+    list_speed = [1,1.5,2,2.5]
     list_test = [20,50]
-    # list_test = [2]
     statistics = -1
-    #for num_agents in range(len(list_test)):  # (20, 50, 100, 200)
     for speed in list_speed:
         print(speed)
         statistics = -1
