@@ -168,6 +168,7 @@ class EnvironmentViewer():
         self.screen = pygame.display.set_mode((800, 800))
 
     def draw(self):
+        pygame.event.get()
         self.screen.fill(self.BG_COLOR)
 
         for agent in self.env.agents:
@@ -255,18 +256,18 @@ def runSimulation(roomHeight=10,
                                  'p2': Point(roomWidth, roomHeight / 2 - doorWidth / 2)}))  # Top Doorway
     walls.append(Wall('line', **{'p1': Point(roomWidth, roomHeight / 2 + doorWidth / 2),
                                  'p2': Point(roomWidth, roomHeight)}))  # Bottom Doorway
-#door right
+    #door right
     # walls.append(Wall('line', **{ 'p1': Point(roomWidth,0), 'p2': Point(roomWidth, roomHeight/2 - doorWidth/2) })) # Top Doorway
     # walls.append(Wall('line', **{ 'p1': Point(roomWidth, roomHeight/2 + doorWidth/2), 'p2': Point(roomWidth, roomHeight) })) # Bottom Doorway
 
-#door left
+    #door left
     if twoDoors:
         walls.append(Wall('line', **{ 'p1': Point(0,0), 'p2': Point(0, roomHeight/2 - doorWidth/2) })) # Top Doorway
         walls.append(Wall('line', **{ 'p1': Point(0, roomHeight/2 + doorWidth/2), 'p2': Point(0, roomHeight) })) # Bottom Doorway
 
     goals = []
     # goals.append(Goal('line',True,True, **{'p1': Point(roomWidth, roomHeight / 2 - doorWidth / 2),
-                                 # 'p2': Point(roomWidth, roomHeight / 2 + doorWidth / 2)}))
+    # 'p2': Point(roomWidth, roomHeight / 2 + doorWidth / 2)}))
     goals.append(Goal('line',True,True, **{ 'p1': Point(roomWidth, roomHeight/2 - doorWidth/2), 'p2': Point(roomWidth, roomHeight/2 + doorWidth/2) }))
     if twoDoors:
         goals.append(Goal('line',True,False, **{ 'p1': Point(0, roomHeight/2 - doorWidth/2), 'p2': Point(0, roomHeight/2 + doorWidth/2) }))
@@ -298,38 +299,9 @@ def runSimulation(roomHeight=10,
             return goal2
         else:
             return goal1
-
-    #2.3 code
-    oldAgents = int(numAgents*0.2)
-    i = 1
-    for _ in range(oldAgents):
-        # Agent(size, mass, pos, goal, desiredSpeed = 4))
-        size = randFloat(.25, .35)
-        mass = agentMass
-        # pos = Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))
-        pos = Point(randFloat(.5, roomWidth - .5), randFloat(.5, roomHeight - .5))
-        if twoDoors:
-            if halfMode:
-                if (i < numAgents / 2):
-                    goal = goals[0]
-                else:
-                    goal = closest_door(pos.x, pos.y, goals[0], goals[1])
-            elif not halfMode and smoke:
-                goal = closest_door(pos.x, pos.y, goals[0], goals[1]) if i < numAgents / 2 else Goal('line', False, **{
-                    'p1': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5)),
-                    'p2': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))})
-            else:
-                goal = closest_door(pos.x, pos.y, goals[0], goals[1])
-        else:
-            goal = goals[0] if not smoke else Goal('line', False, **{
-                'p1': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5)),
-                'p2': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))})
-
-        agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed/3))
-        i += 1
 #3.3
     i=1
-    for _ in range(numAgents-oldAgents):
+    for _ in range(numAgents):
         # Agent(size, mass, pos, goal, desiredSpeed = 4))
         size = randFloat(.25, .35)
         mass = agentMass
@@ -342,9 +314,9 @@ def runSimulation(roomHeight=10,
                 else:
                     goal = closest_door(pos.x, pos.y, goals[0], goals[1])
             elif not halfMode and smoke:
-                    goal = closest_door(pos.x, pos.y, goals[0], goals[1]) if i<numAgents/2 else Goal('line', False, **{
-                'p1': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5)),
-                'p2': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))})
+                goal = closest_door(pos.x, pos.y, goals[0], goals[1]) if i<numAgents/2 else Goal('line', False, **{
+                    'p1': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5)),
+                    'p2': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))})
             else:
                 goal = closest_door(pos.x,pos.y,goals[0],goals[1])
         else:
@@ -373,23 +345,23 @@ def runSimulation(roomHeight=10,
     #     agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed))
 
 
-        #3.2
-        # size = randFloat(.25, .35)
-        # mass = agentMass
-        # pos = Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))
-        # print(pos)
-        # if (i < numAgents / 2):
-        #     goal = goals[0]
-        # else:
-        #     goal = closest_door(pos.x, pos.y, goals[0], goals[1])
-        #
-        # print(goal.get_x())
-        # print(goal.get_higher_y())
-        # # choice = random.randint(0,len(goals)-1)
-        # # print(choice)
-        # # goal = goals[choice]
-        # agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed))
-        # i+=1
+    #3.2
+    # size = randFloat(.25, .35)
+    # mass = agentMass
+    # pos = Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))
+    # print(pos)
+    # if (i < numAgents / 2):
+    #     goal = goals[0]
+    # else:
+    #     goal = closest_door(pos.x, pos.y, goals[0], goals[1])
+    #
+    # print(goal.get_x())
+    # print(goal.get_higher_y())
+    # # choice = random.randint(0,len(goals)-1)
+    # # print(choice)
+    # # goal = goals[choice]
+    # agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed))
+    # i+=1
 
 
     env = Environment(100, walls, goals, agents, {}, instruments, smoke)
@@ -402,17 +374,25 @@ def runSimulation(roomHeight=10,
 
     # print(env.instruments[0].metric)
     # Run until all agents have escaped
+    start = 0
     while env.instruments[0].metric[-1] <= len(env.agents):
         env.step()
         if view:
             viewer.draw()
             # pygame.event.wait()
         if len(env.instruments[0].metric) % 100 == 0:
+            if(env.instruments[0].metric[-1] != env.instruments[0].metric[-100]):
+                start = 0
+            else:
+                start+=100
             message = "num escaped: {}, step: {}".format(env.instruments[0].metric[-1], len(env.instruments[0].metric))
             sys.stdout.write('\r' + str(message) + ' ' * 20)
+            sys.stdout.write("second since update "+str(start))
             sys.stdout.flush()  # important
+            if(start>7000):
+                return -1
 
-        if len(env.instruments[0].metric) == 9000000000 or env.instruments[0].metric[-1] == len(env.agents):
+        if len(env.instruments[0].metric) == 900000000000 or env.instruments[0].metric[-1] == len(env.agents):
             message = "num escaped: {}, step: {}".format(env.instruments[0].metric[-1], len(env.instruments[0].metric))
             sys.stdout.write('\r' + str(message) + ' ' * 20)
             sys.stdout.flush()  # important
@@ -428,12 +408,19 @@ def runExperiment():
 
     time_to_escape = []
     list_speed = [1,1.5,2,2.5,3,4,5,6,7,8,9,10]
+
+    #list_test = [20, 50, 100, 200]
+    # list_test = [100]
+    list_test = [20,50]
+    # list_test = [2]
+    statistics = -1
+    #for num_agents in range(len(list_test)):  # (20, 50, 100, 200)
     for speed in list_speed:
         print(speed)
-    #list_test = [50]
-    #for num_agents in range(len(list_test)):  # (20, 50, 100, 200)
-        statistics = runSimulation(view=False, desiredSpeed=speed, numAgents=50, roomHeight=15,
-                                   roomWidth=15, smoke=False, twoDoors=False,halfMode=False)
+        statistics = -1
+        while(statistics==-1):
+            statistics = runSimulation(view=False, desiredSpeed=speed, numAgents=50, roomHeight=15,
+                                   roomWidth=15, doorWidth=1, smoke=False,twoDoors=False, halfMode=False)
 
         x.append(50)
         time_to_escape.append(len(statistics))

@@ -47,12 +47,12 @@ class Agent:
             return Point(-1, 0)
 
         # If above the goal, move to top point
-        elif self.pos.y - self.size < p1.y:
-            return self.vectorTo(p1 + Point(0, .5)).norm()
+        elif self.pos.y - self.size <= p1.y:
+            return self.vectorTo(p1 + Point(0, 0.5)).norm()
 
         # If below the goal, move to bottom point
-        elif self.pos.y + self.size > p2.y:
-            return self.vectorTo(p2 - Point(0, .5)).norm()
+        elif self.pos.y + self.size >= p2.y:
+            return self.vectorTo(p2 - Point(0, 0.5)).norm()
 
         elif self.pos.x != p1.x and not self.goal.isReal:
             return self.vectorTo(Point(p1.x - self.pos.x, 0)).norm()
