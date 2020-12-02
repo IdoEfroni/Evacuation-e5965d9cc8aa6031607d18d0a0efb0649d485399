@@ -418,7 +418,7 @@ def runSimulation(roomHeight=10,
             sys.stdout.write('\r' + str(message) + ' ' * 20)
             sys.stdout.write("second since update "+str(start))
             sys.stdout.flush()  # important
-            if(start>20000):
+            if(start>4500):
                 return -1
 
         if len(env.instruments[0].metric) == 900000000000 or env.instruments[0].metric[-1] == len(env.agents):
@@ -436,14 +436,14 @@ def runExperiment():
     import time
 
     time_to_escape = []
-    list_speed = [0.5]
-    list_test = [20,50]
+    list_speed = [1.5]
+    list_test = [30,40,50,60]
     statistics = -1
-    for speed in list_speed:
-        print(speed)
+    for test in list_test:
+        print(test)
         statistics = -1
         while(statistics==-1):
-            statistics = runSimulation(view=False, desiredSpeed=speed, numAgents=50, roomHeight=15,
+            statistics = runSimulation(view=False, desiredSpeed=1.5, numAgents=test, roomHeight=15,
                                    roomWidth=15, doorWidth=1, smoke=False,twoDoors=False, halfMode=False)
 
         x.append(50)
