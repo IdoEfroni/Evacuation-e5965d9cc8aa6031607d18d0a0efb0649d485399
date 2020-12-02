@@ -299,9 +299,38 @@ def runSimulation(roomHeight=10,
             return goal2
         else:
             return goal1
-#3.3
+#old 2.3
     i=1
-    for _ in range(numAgents):
+    old_agent = int(numAgents * 0.2)
+    for _ in range(old_agent):
+        # Agent(size, mass, pos, goal, desiredSpeed = 4))
+        size = randFloat(.25, .35)
+        mass = agentMass
+        # pos = Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))
+        pos = Point(randFloat(.5, roomWidth - .5), randFloat(.5, roomHeight - .5))
+        if twoDoors:
+            if halfMode:
+                if (i < numAgents / 2):
+                    goal = goals[0]
+                else:
+                    goal = closest_door(pos.x, pos.y, goals[0], goals[1])
+            elif not halfMode and smoke:
+                goal = closest_door(pos.x, pos.y, goals[0], goals[1]) if i<numAgents/2 else Goal('line', False, **{
+                    'p1': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5)),
+                    'p2': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))})
+            else:
+                goal = closest_door(pos.x,pos.y,goals[0],goals[1])
+        else:
+            goal = goals[0] if not smoke else Goal('line', False, **{
+                'p1': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5)),
+                'p2': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))})
+
+        agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed/3))
+        i+=1
+
+    i=1
+
+    for _ in range(numAgents-old_agent):
         # Agent(size, mass, pos, goal, desiredSpeed = 4))
         size = randFloat(.25, .35)
         mass = agentMass
@@ -389,7 +418,7 @@ def runSimulation(roomHeight=10,
             sys.stdout.write('\r' + str(message) + ' ' * 20)
             sys.stdout.write("second since update "+str(start))
             sys.stdout.flush()  # important
-            if(start>7000):
+            if(start>20000):
                 return -1
 
         if len(env.instruments[0].metric) == 900000000000 or env.instruments[0].metric[-1] == len(env.agents):
@@ -407,7 +436,7 @@ def runExperiment():
     import time
 
     time_to_escape = []
-    list_speed = [6,7]
+    list_speed = [0.5]
     list_test = [20,50]
     statistics = -1
     for speed in list_speed:
