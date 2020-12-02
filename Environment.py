@@ -7,6 +7,8 @@ from pygame.color import *
 import thinkplot
 import random
 import time
+import numpy as np
+import ghalton
 
 from datetime import datetime
 import pickle
@@ -18,7 +20,7 @@ DEBUG = False
 
 
 class Wall:
-    def __init__(self, wallType,isReal=True,isRight=False, **parameters):
+    def __init__(self, wallType, isReal=True, isRight=False, **parameters):
         # type : "line", points
         # Line : type='line'{ "pf: Point(x1,y1), "p2": Point(x2,y2) }
         self.wallType = wallType
@@ -26,7 +28,6 @@ class Wall:
         self.isReal = isReal
         self.isRight = isRight
         self.checkValid()
-
 
     def checkValid(self):
         if self.wallType == 'line':
@@ -58,19 +59,21 @@ class Goal(Wall):
 
     def get_x(self):
         return (self.parameters['p1'].x)
+
     def get_higher_y(self):
         return (self.parameters['p2'].y)
+
     def get_lower_y(self):
         return (self.parameters['p1'].y)
+
     def is_right(self):
-        if self.get_x()!=0:
+        if self.get_x() != 0:
             return True
         else:
             return False
 
     def agentsDistance(agent, other):
         return agent.pos._distance_(other.pos);
-
 
 
 def agentsDistance(agent, other):
@@ -92,19 +95,19 @@ def closeNeighbour(env, agent):
             agent.certainty = True
             xSum += other.pos.x
             ySum += other.pos.y
-            totalNeigh +=1
+            totalNeigh += 1
 
-    if totalNeigh>0:
-        return Goal('line',False, **{'p1': Point(xSum/totalNeigh,ySum/totalNeigh),
-                                   'p2': Point(xSum/totalNeigh,ySum/totalNeigh)})
+    if totalNeigh > 0:
+        return Goal('line', False, **{'p1': Point(xSum / totalNeigh, ySum / totalNeigh),
+                                      'p2': Point(xSum / totalNeigh, ySum / totalNeigh)})
     else:
         agent.certainty = False
-        return Goal('line',False, **{'p1': Point(randFloat(.5, 2 * 15 / 3 - .5), randFloat(.5, 15 - .5)),
-                           'p2': Point(randFloat(.5, 2 * 15 / 3 - .5), randFloat(.5, 15 - .5))})  # random direction
+        return Goal('line', False, **{'p1': Point(randFloat(.5, 2 * 15 / 3 - .5), randFloat(.5, 15 - .5)),
+                                      'p2': Point(randFloat(.5, 2 * 15 / 3 - .5),
+                                                  randFloat(.5, 15 - .5))})  # random direction
 
 
 def isFinished(agent, goals):
-
     if agent.pos.x >= agent.goal.parameters['p1'].x and agent.goal.isReal and agent.goal.isRight:
         return True
     elif agent.pos.x <= agent.goal.parameters['p1'].x and agent.goal.isReal and not agent.goal.isRight:
@@ -113,16 +116,16 @@ def isFinished(agent, goals):
 
 
 class Environment():
-    conditions = {'k': 1.2 * 10 ** 5, 'ka': 2.4 * 10 ** 5}
+    # conditions = {'k': 1.2 * 10 ** 5, 'ka': 2.4 * 10 ** 5}
 
-    def __init__(self, N, walls, goals, agents, conditions, instruments, smoke):
+    def __init__(self, N, walls, goals, agents, instruments, smoke):
         self.N = N
         self.walls = walls
         self.goals = goals
         self.agents = agents
         self.instruments = instruments
         # Conditions: Agent force, Agent repulsive distance, acceleration time, step length,
-        self.conditions.update(conditions)
+        # self.conditions.update(conditions)
         self.smoke = smoke
 
     def step(self):
@@ -139,7 +142,7 @@ class Environment():
                 pairForce += agent.pairForce(agent2)
             netForce = selfDriveForce + pairForce + wallForce
             agent.move(netForce, closeNeighbour(self, agent)) if self.smoke else agent.move(netForce)
-            if isFinished(agent,self.goals):
+            if isFinished(agent, self.goals):
                 agent.Finish = True
 
         self.updateInstruments()
@@ -191,7 +194,7 @@ class EnvironmentViewer():
         pygame.font.init()
         font = pygame.font.SysFont('arial', 20)
         text = font.render(str(agent.index), True, (255, 0, 0))
-        self.screen.blit(text, Point(agent.pos.x-agent.size/2,agent.pos.y-agent.size).pygame)
+        self.screen.blit(text, Point(agent.pos.x - agent.size / 2, agent.pos.y - agent.size).pygame)
 
         if (DEBUG): print("drew agent at ", agent.pos)
 
@@ -236,6 +239,10 @@ def randFloat(minVal, maxVal):
     return random.random() * (maxVal - minVal) + minVal
 
 
+def randHalton(randhalton, minVal, maxVal):
+    return randhalton * (maxVal - minVal) + minVal
+
+
 def runSimulation(roomHeight=10,
                   roomWidth=8,
                   doorWidth=1,
@@ -243,40 +250,44 @@ def runSimulation(roomHeight=10,
                   agentMass=80,
                   desiredSpeed=1.5,
                   view=False,
+                  halton=False,
                   smoke=False,
-                  twoDoors = False,
-                  halfMode = False):
+                  twoDoors=False,
+                  halfMode=False):
     walls = []
     walls.append(Wall('line', **{'p1': Point(0, 0), 'p2': Point(roomWidth, 0)}))  # Top
     if not twoDoors:
-        walls.append(Wall('line', **{ 'p1': Point(0,0), 'p2': Point(0, roomHeight) })) # Left
+        walls.append(Wall('line', **{'p1': Point(0, 0), 'p2': Point(0, roomHeight)}))  # Left
     walls.append(Wall('line', **{'p1': Point(0, roomHeight), 'p2': Point(roomWidth, roomHeight)}))  # Bottom
 
     walls.append(Wall('line', **{'p1': Point(roomWidth, 0),
                                  'p2': Point(roomWidth, roomHeight / 2 - doorWidth / 2)}))  # Top Doorway
     walls.append(Wall('line', **{'p1': Point(roomWidth, roomHeight / 2 + doorWidth / 2),
                                  'p2': Point(roomWidth, roomHeight)}))  # Bottom Doorway
-    #door right
+    # door right
     # walls.append(Wall('line', **{ 'p1': Point(roomWidth,0), 'p2': Point(roomWidth, roomHeight/2 - doorWidth/2) })) # Top Doorway
     # walls.append(Wall('line', **{ 'p1': Point(roomWidth, roomHeight/2 + doorWidth/2), 'p2': Point(roomWidth, roomHeight) })) # Bottom Doorway
 
-    #door left
+    # door left
     if twoDoors:
-        walls.append(Wall('line', **{ 'p1': Point(0,0), 'p2': Point(0, roomHeight/2 - doorWidth/2) })) # Top Doorway
-        walls.append(Wall('line', **{ 'p1': Point(0, roomHeight/2 + doorWidth/2), 'p2': Point(0, roomHeight) })) # Bottom Doorway
+        walls.append(Wall('line', **{'p1': Point(0, 0), 'p2': Point(0, roomHeight / 2 - doorWidth / 2)}))  # Top Doorway
+        walls.append(Wall('line', **{'p1': Point(0, roomHeight / 2 + doorWidth / 2),
+                                     'p2': Point(0, roomHeight)}))  # Bottom Doorway
 
     goals = []
     # goals.append(Goal('line',True,True, **{'p1': Point(roomWidth, roomHeight / 2 - doorWidth / 2),
     # 'p2': Point(roomWidth, roomHeight / 2 + doorWidth / 2)}))
-    goals.append(Goal('line',True,True, **{ 'p1': Point(roomWidth, roomHeight/2 - doorWidth/2), 'p2': Point(roomWidth, roomHeight/2 + doorWidth/2) }))
+    goals.append(Goal('line', True, True, **{'p1': Point(roomWidth, roomHeight / 2 - doorWidth / 2),
+                                             'p2': Point(roomWidth, roomHeight / 2 + doorWidth / 2)}))
     if twoDoors:
-        goals.append(Goal('line',True,False, **{ 'p1': Point(0, roomHeight/2 - doorWidth/2), 'p2': Point(0, roomHeight/2 + doorWidth/2) }))
-
+        goals.append(Goal('line', True, False, **{'p1': Point(0, roomHeight / 2 - doorWidth / 2),
+                                                  'p2': Point(0, roomHeight / 2 + doorWidth / 2)}))
 
     instruments = []
     instruments.append(ReachedGoal())
 
     agents = []
+
     # old_agent = int(numAgents*0.2)
     # for _ in range(old_agent):
     #     # Agent(size, mass, pos, goal, desiredSpeed = 4))
@@ -287,10 +298,10 @@ def runSimulation(roomHeight=10,
     #
     #     agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed/3))
 
-    def closest_door(x,y,goal1,goal2):
-        if y>goal1.get_higher_y():
-            distance_left = math.sqrt(pow(x-goal2.get_x(),2) +pow(y-goal2.get_higher_y(),2) )
-            distance_right = math.sqrt(pow(x-goal1.get_x(),2) +pow(y-goal1.get_higher_y(),2) )
+    def closest_door(x, y, goal1, goal2):
+        if y > goal1.get_higher_y():
+            distance_left = math.sqrt(pow(x - goal2.get_x(), 2) + pow(y - goal2.get_higher_y(), 2))
+            distance_right = math.sqrt(pow(x - goal1.get_x(), 2) + pow(y - goal1.get_higher_y(), 2))
         else:
             distance_left = math.sqrt(pow(x - goal2.get_x(), 2) + pow(y - goal2.get_lower_y(), 2))
             distance_right = math.sqrt(pow(x - goal1.get_x(), 2) + pow(y - goal1.get_lower_y(), 2))
@@ -299,14 +310,24 @@ def runSimulation(roomHeight=10,
             return goal2
         else:
             return goal1
-    #3.3
-    i=1
+
+    def get_next_halton(points):
+        number = points[0].pop()
+        return number
+
+    # 3.3
+    i = 1
+    sequence = None if not halton else ghalton.GeneralizedHalton(2*numAgents)
+    points = None if not halton else sequence.get(1)
     for _ in range(numAgents):
         # Agent(size, mass, pos, goal, desiredSpeed = 4))
+
         size = randFloat(.25, .35)
         mass = agentMass
         # pos = Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))
-        pos = Point(randFloat(.5, roomWidth - .5), randFloat(.5, roomHeight - .5))
+
+        pos = Point(randFloat(.5, roomWidth - .5), randFloat(.5, roomHeight - .5)) if not halton else Point(
+            randHalton(get_next_halton(points), 0.5, roomWidth - 0.5), randHalton(get_next_halton(points), 0.5, roomHeight - 0.5))
         if twoDoors:
             if halfMode:
                 if (i < numAgents / 2):
@@ -314,57 +335,39 @@ def runSimulation(roomHeight=10,
                 else:
                     goal = closest_door(pos.x, pos.y, goals[0], goals[1])
             elif not halfMode and smoke:
-                goal = closest_door(pos.x, pos.y, goals[0], goals[1]) if i<numAgents/2 else Goal('line', False, **{
-                    'p1': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5)),
-                    'p2': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))})
+                goal = closest_door(pos.x, pos.y, goals[0], goals[1]) if (i < (numAgents / 2)) else Goal('line', False,
+                                                                                                         **{
+                                                                                                             'p1': Point(
+                                                                                                                 randFloat(
+                                                                                                                     .5,
+                                                                                                                     2 * roomWidth / 3 - .5),
+                                                                                                                 randFloat(
+                                                                                                                     .5,
+                                                                                                                     roomHeight - .5)),
+                                                                                                             'p2': Point(
+                                                                                                                 randFloat(
+                                                                                                                     .5,
+                                                                                                                     2 * roomWidth / 3 - .5),
+                                                                                                                 randFloat(
+                                                                                                                     .5,
+                                                                                                                     roomHeight - .5))})
             else:
-                goal = closest_door(pos.x,pos.y,goals[0],goals[1])
+                goal = closest_door(pos.x, pos.y, goals[0], goals[1])
         else:
-            goal = goals[0] if not smoke else Goal('line', False, **{
-                'p1': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5)),
-                'p2': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))})
+            if (not smoke):
+                goal = goals[0]
+            else:
+                if i < numAgents / 2:
+                    goal = goals[0]
+                else:
+                    goal = Goal('line', False, **{
+                        'p1': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5)),
+                        'p2': Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))})
 
         agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed))
-        i+=1
+        i += 1
 
-    env = Environment(100, walls, goals, agents, {}, instruments, smoke)
-
-    #3.1
-    # i=1
-    # for _ in range(numAgents):
-    #     # Agent(size, mass, pos, goal, desiredSpeed = 4))
-    #     size = randFloat(.25, .35)
-    #     mass = agentMass
-    #     pos = Point(randFloat(.5, 2*roomWidth/3 - .5), randFloat(.5,roomHeight-.5))
-    #     print(pos)
-    #     goal = closest_door(pos.x,pos.y,goals[0],goals[1])
-    #     print(goal.get_x())
-    #     #choice = random.randint(0,len(goals)-1)
-    #     #print(choice)
-    #     #goal = goals[choice]
-    #     agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed))
-
-
-    #3.2
-    # size = randFloat(.25, .35)
-    # mass = agentMass
-    # pos = Point(randFloat(.5, 2 * roomWidth / 3 - .5), randFloat(.5, roomHeight - .5))
-    # print(pos)
-    # if (i < numAgents / 2):
-    #     goal = goals[0]
-    # else:
-    #     goal = closest_door(pos.x, pos.y, goals[0], goals[1])
-    #
-    # print(goal.get_x())
-    # print(goal.get_higher_y())
-    # # choice = random.randint(0,len(goals)-1)
-    # # print(choice)
-    # # goal = goals[choice]
-    # agents.append(Agent(size, mass, pos, goal, desiredSpeed=desiredSpeed))
-    # i+=1
-
-
-    env = Environment(100, walls, goals, agents, {}, instruments, smoke)
+    env = Environment(100, walls, goals, agents, instruments, smoke)
 
     if view:
         viewer = EnvironmentViewer(env)
@@ -381,18 +384,18 @@ def runSimulation(roomHeight=10,
             viewer.draw()
             # pygame.event.wait()
         if len(env.instruments[0].metric) % 100 == 0:
-            if(env.instruments[0].metric[-1] != env.instruments[0].metric[-100]):
+            if (env.instruments[0].metric[-1] != env.instruments[0].metric[-100]):
                 start = 0
             else:
-                start+=100
+                start += 100
             message = "num escaped: {}, step: {}".format(env.instruments[0].metric[-1], len(env.instruments[0].metric))
             sys.stdout.write('\r' + str(message) + ' ' * 20)
-            sys.stdout.write("second since update "+str(start))
+            sys.stdout.write("second since update " + str(start))
             sys.stdout.flush()  # important
-            if(start>7000):
-                return -1
+            # if (start > 7000):
+            # return -1
 
-        if len(env.instruments[0].metric) == 900000000000 or env.instruments[0].metric[-1] == len(env.agents):
+        if len(env.instruments[0].metric) == 9000 or env.instruments[0].metric[-1] == len(env.agents):
             message = "num escaped: {}, step: {}".format(env.instruments[0].metric[-1], len(env.instruments[0].metric))
             sys.stdout.write('\r' + str(message) + ' ' * 20)
             sys.stdout.flush()  # important
@@ -407,16 +410,21 @@ def runExperiment():
     import time
 
     time_to_escape = []
-    #list_test = [20, 50, 100, 200]
+    list_test = [20, 50, 100]
     # list_test = [100]
-    list_test = [20,50]
-    # list_test = [2]
+    # list_test = [50]
+    # list_test = np.arange(20, 200, 10)
+    # list_test = [4]
     statistics = -1
     for num_agents in range(len(list_test)):  # (20, 50, 100, 200)
-        statistics = -1
-        while(statistics==-1):
-            statistics = runSimulation(view=False, desiredSpeed=0.6, numAgents=list_test[num_agents], roomHeight=15,
-                                   roomWidth=15, doorWidth=1, smoke=False,twoDoors=False, halfMode=False)
+        # for speed in range(3, 7):
+        #    print("for speed: ",speed)
+        # statistics = -1
+        # while (statistics == -1):
+        print("###### 2 DOOR WIDTH 1M SPEED 1.5 SMOKE - HALTON ########")
+        print("for ", list_test[num_agents], "of agents:")
+        statistics = runSimulation(view=False, desiredSpeed=1.5, numAgents=list_test[num_agents], roomHeight=15,
+                                   roomWidth=15, doorWidth=1,halton=True, smoke=True, twoDoors=True, halfMode=False)
 
         x.append(num_agents)
         time_to_escape.append(len(statistics))
